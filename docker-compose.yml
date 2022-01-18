@@ -8,16 +8,19 @@ version: "2.4"
 # also need to be updated.
 
 # TODO: do we need privileged mode?
+# TODO: remove pcap volumes
+# TODO: 172.19 -> 172.18
+# TODO: dada -> beef
 
 networks:
-  nat64-test-bed:
+  testnet:
     driver: bridge
     enable_ipv6: true
     ipam:
       driver: default
       config:
-        - subnet: 172.18.0.0/16
-        - subnet: fd00:dead:beef::/48
+        - subnet: 172.19.0.0/16
+        - subnet: fd00:dead:dada::/48
 
 services:
   # TODO: gateway doc
@@ -26,65 +29,82 @@ services:
       context: .
       dockerfile: gateway.dockerfile
       args:
-        - MY_IP: 172.18.0.1
-        - NAT64_DYN_POOL: 172.18.0.128/25
+        - MY_IP=172.19.0.10
+        - NAT64_DYN_POOL=172.19.0.128/25
+    cap_add:
+      - NET_ADMIN
     networks:
-      nat64-test-bed:
-        ipv4_address: 172.18.0.1
-        ipv6_address: fd00:dead:beef::1
+      testnet:
+        ipv4_address: 172.19.0.10
+        ipv6_address: fd00:dead:dada::10
+    volumes:
+      - ./pcaps:/pcaps
   
   nat64:
     build:
       context: .
       dockerfile: nat64.dockerfile
       args:
-        - GATEWAY_IP: 172.18.0.1
+        - GATEWAY_IP=172.19.0.10
     environment:
-      - TAYGA_CONF_IPV4_ADDR=172.18.0.2
+      - TAYGA_CONF_IPV4_ADDR=172.19.0.20
       - TAYGA_CONF_PREFIX=2001:db8:64:ff9b::/96
-      - TAYGA_CONF_DYNAMIC_POOL=172.18.0.128/25
+      - TAYGA_CONF_DYNAMIC_POOL=172.19.0.128/25
     sysctls:
       - net.ipv6.conf.all.disable_ipv6=0
       - net.ipv6.conf.all.forwarding=1
+    cap_add:
+      - NET_ADMIN
     networks:
-      nat64-test-bed:
-        ipv4_address: 172.18.0.2
-        ipv6_address: fd00:dead:beef::2
+      testnet:
+        ipv4_address: 172.19.0.20
+        ipv6_address: fd00:dead:dada::20
+    devices:
+      - /dev/net/tun
+    volumes:
+      - ./pcaps:/pcaps
 
   dns64:
     build:
       context: .
       dockerfile: dns64.dockerfile
       args:
-        - NAT64_PREFIX: 2001:db8:64:ff9b::/96
-        - NAT64_IPV6_ADDR: fd00:dead:beef::2
-        - MY_IPV4: 172.18.0.3
+        - NAT64_PREFIX=2001:db8:64:ff9b::/96
+        - NAT64_IPV6_ADDR=fd00:dead:dada::20
+        - MY_IPV4=172.19.0.30
     # The dns64 container uses itself for DNS.
-    dns: fd00:dead:beef::3
+    dns: fd00:dead:dada::30
     sysctls:
       - net.ipv6.conf.all.disable_ipv6=0
       - net.ipv6.conf.all.forwarding=1
+    cap_add:
+      - NET_ADMIN
     volumes:
       - ./bind9-named.conf:/etc/bind/named.conf
+      - ./pcaps:/pcaps
     networks:
-      nat64-test-bed:
-        ipv4_address: 172.18.0.3
-        ipv6_address: fd00:dead:beef::3
+      testnet:
+        ipv4_address: 172.19.0.30
+        ipv6_address: fd00:dead:dada::30
   
   client:
     build:
       context: .
       dockerfile: client.dockerfile
       args:
-        - NAT64_PREFIX: 2001:db8:64:ff9b::/96
-        - NAT64_IPV6_ADDR: fd00:dead:beef::2
-        - MY_IPV4: 172.18.0.4
+        - NAT64_PREFIX=2001:db8:64:ff9b::/96
+        - NAT64_IPV6_ADDR=fd00:dead:dada::20
+        - MY_IPV4=172.19.0.40
     # These environment variables are defined for convenience.
     environment:
       - NAT64_PREFIX=2001:db8:64:ff9b::/96
-      - NAT64_DYNAMIC_POOL=172.18.0.128/25
+      - NAT64_DYNAMIC_POOL=172.19.0.128/25
+    cap_add:
+      - NET_ADMIN
     networks:
-      nat64-test-bed:
-        ipv4_address: 172.18.0.4
-        ipv6_address: fd00:dead:beef::4
+      testnet:
+        ipv4_address: 172.19.0.40
+        ipv6_address: fd00:dead:dada::40
+    volumes:
+      - ./pcaps:/pcaps
     
