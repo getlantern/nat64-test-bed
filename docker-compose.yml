@@ -1,0 +1,90 @@
+# n.b. IPv6 is not currently supported in Compose File version 3:
+# https://docs.docker.com/compose/compose-file/compose-file-v3/#enable_ipv6
+version: "2.4"
+
+# Unfortunately, Docker Compose files offer no means of defining variables, so things like the NAT64
+# prefix are hard-coded below. The individual Dockerfiles are parameterized, so it should be
+# sufficient to change values in this file only. The only exception is bind9-named.conf, which will
+# also need to be updated.
+
+# TODO: do we need privileged mode?
+
+networks:
+  nat64-test-bed:
+    driver: bridge
+    enable_ipv6: true
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.18.0.0/16
+        - subnet: fd00:dead:beef::/48
+
+services:
+  # TODO: gateway doc
+  gateway:
+    build:
+      context: .
+      dockerfile: gateway.dockerfile
+      args:
+        - MY_IP: 172.18.0.1
+        - NAT64_DYN_POOL: 172.18.0.128/25
+    networks:
+      nat64-test-bed:
+        ipv4_address: 172.18.0.1
+        ipv6_address: fd00:dead:beef::1
+  
+  nat64:
+    build:
+      context: .
+      dockerfile: nat64.dockerfile
+      args:
+        - GATEWAY_IP: 172.18.0.1
+    environment:
+      - TAYGA_CONF_IPV4_ADDR=172.18.0.2
+      - TAYGA_CONF_PREFIX=2001:db8:64:ff9b::/96
+      - TAYGA_CONF_DYNAMIC_POOL=172.18.0.128/25
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6=0
+      - net.ipv6.conf.all.forwarding=1
+    networks:
+      nat64-test-bed:
+        ipv4_address: 172.18.0.2
+        ipv6_address: fd00:dead:beef::2
+
+  dns64:
+    build:
+      context: .
+      dockerfile: dns64.dockerfile
+      args:
+        - NAT64_PREFIX: 2001:db8:64:ff9b::/96
+        - NAT64_IPV6_ADDR: fd00:dead:beef::2
+        - MY_IPV4: 172.18.0.3
+    # The dns64 container uses itself for DNS.
+    dns: fd00:dead:beef::3
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6=0
+      - net.ipv6.conf.all.forwarding=1
+    volumes:
+      - ./bind9-named.conf:/etc/bind/named.conf
+    networks:
+      nat64-test-bed:
+        ipv4_address: 172.18.0.3
+        ipv6_address: fd00:dead:beef::3
+  
+  client:
+    build:
+      context: .
+      dockerfile: client.dockerfile
+      args:
+        - NAT64_PREFIX: 2001:db8:64:ff9b::/96
+        - NAT64_IPV6_ADDR: fd00:dead:beef::2
+        - MY_IPV4: 172.18.0.4
+    # These environment variables are defined for convenience.
+    environment:
+      - NAT64_PREFIX=2001:db8:64:ff9b::/96
+      - NAT64_DYNAMIC_POOL=172.18.0.128/25
+    networks:
+      nat64-test-bed:
+        ipv4_address: 172.18.0.4
+        ipv6_address: fd00:dead:beef::4
+    
