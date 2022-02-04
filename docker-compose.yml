@@ -112,4 +112,5 @@ services:
         ipv6_address: fd00:dead:dada::40
     volumes:
       - ./pcaps:/pcaps
+      - ./client-volume:/shared-volume
     
