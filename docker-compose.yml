@@ -12,6 +12,7 @@ version: "2.4"
 # TODO: 172.19 -> 172.18
 # TODO: dada -> beef
 
+# TODO: make gateway explicit?
 networks:
   testnet:
     driver: bridge
@@ -30,9 +31,11 @@ services:
       dockerfile: gateway.dockerfile
       args:
         - MY_IP=172.19.0.10
+        - NAT64_IP=172.19.0.20
         - NAT64_DYN_POOL=172.19.0.128/25
     cap_add:
       - NET_ADMIN
+    dns: 8.8.8.8
     networks:
       testnet:
         ipv4_address: 172.19.0.10
@@ -46,6 +49,8 @@ services:
       dockerfile: nat64.dockerfile
       args:
         - GATEWAY_IP=172.19.0.10
+        - DOCKER_GATEWAY_IP=172.19.0.1
+        - TAYGA_CONF_DYNAMIC_POOL=172.19.0.128/25
     environment:
       - TAYGA_CONF_IPV4_ADDR=172.19.0.20
       - TAYGA_CONF_PREFIX=2001:db8:64:ff9b::/96
@@ -95,6 +100,7 @@ services:
         - NAT64_PREFIX=2001:db8:64:ff9b::/96
         - NAT64_IPV6_ADDR=fd00:dead:dada::20
         - MY_IPV4=172.19.0.40
+    # TODO: set DNS?
     # These environment variables are defined for convenience.
     environment:
       - NAT64_PREFIX=2001:db8:64:ff9b::/96
