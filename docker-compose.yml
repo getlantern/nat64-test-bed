@@ -35,7 +35,6 @@ services:
         - NAT64_DYN_POOL=172.19.0.128/25
     cap_add:
       - NET_ADMIN
-    dns: 8.8.8.8
     networks:
       testnet:
         ipv4_address: 172.19.0.10
@@ -100,7 +99,7 @@ services:
         - NAT64_PREFIX=2001:db8:64:ff9b::/96
         - NAT64_IPV6_ADDR=fd00:dead:dada::20
         - MY_IPV4=172.19.0.40
-    # TODO: set DNS?
+    dns: fd00:dead:dada::30
     # These environment variables are defined for convenience.
     environment:
       - NAT64_PREFIX=2001:db8:64:ff9b::/96
