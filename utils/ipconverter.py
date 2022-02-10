@@ -13,11 +13,11 @@ Usage:
 Examples:
     192.168.1.1 converts to c0a8:11
     172.18.0.1  converts to ac12:1
-    8.8.8.8     converts to 88:88
+    8.8.8.8     converts to 808:808
 
     c0a8:11 converts to 192.168.1.1
     ac12:1  converts to 172.18.0.1
-    88:88   converts to 8.8.8.8 
+    808:808   converts to 8.8.8.8
 """ % sys.argv[0]
 
 
@@ -25,13 +25,14 @@ def four_to_six(ipv4_address):
     fields = ipv4_address.split('.')
     if len(fields) != 4:
         raise Exception("expected four dot-separated fields")
-    groups = []
+    subgroups = []
     for field in fields:
-        if field == "0":
-            groups.append('')
-        else:
-            groups.append(format(int(field), 'x'))
-    return groups[0] + groups[1] + ':' + groups[2] + groups[3]
+        subgroups.append("{:02x}".format(int(field)))
+    first_group = subgroups[0] + subgroups[1]
+    second_group = subgroups[2] + subgroups[3]
+    first_group = first_group[:3].lstrip("0") + first_group[3]
+    second_group = second_group[:3].lstrip("0") + second_group[3]
+    return first_group + ":" + second_group
 
 
 def six_to_four(ipv6_suffix):
