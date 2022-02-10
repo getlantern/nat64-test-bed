@@ -4,10 +4,7 @@ ARG NAT64_PREFIX
 ARG NAT64_IPV6_ADDR
 ARG MY_IPV4
 
-# TODO: remove tshark
 RUN apk update && apk add tshark
-
-# TODO: maybe finish entrypoint script with some logging of DNS queries?
 
 RUN echo "#!/bin/sh" > /docker-entry.sh
 RUN echo "set -e" >> /docker-entry.sh

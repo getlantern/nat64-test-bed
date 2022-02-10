@@ -4,8 +4,11 @@ ARG MY_IP
 ARG NAT64_IP
 ARG NAT64_DYN_POOL
 
-# TODO: remove tshark and DEBIAN_FRONTEND
-RUN apt update && DEBIAN_FRONTEND=noninteractive apt install -y conntrack iptables iproute2 tshark iputils-ping netcat-openbsd
+RUN apt update && DEBIAN_FRONTEND=noninteractive apt install -y \
+    conntrack \
+    iproute2 \
+    iptables \
+    tshark
 
 RUN echo "#!/bin/bash" > /docker-entry.sh
 RUN echo "set -e" >> /docker-entry.sh

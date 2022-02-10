@@ -11,8 +11,9 @@ ARG TAYGA_CONF_DYNAMIC_POOL
 ARG GATEWAY_IP
 ARG DOCKER_GATEWAY_IP
 
-# TODO: remove iputils, tshark and DEBIAN_FRONTEND
-RUN apt update && DEBIAN_FRONTEND=noninteractive apt install -y iproute2 iputils-ping tshark net-tools traceroute netcat-openbsd
+RUN apt update && DEBIAN_FRONTEND=noninteractive apt install -y \
+    iproute2 \
+    tshark
 
 # /docker-entry.sh is a file in the base image. We want to run our own entry file instead.
 # Additionally, we need to add a routing rule to ensure traffic from the dynamic pool is routed to
