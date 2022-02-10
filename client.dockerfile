@@ -14,7 +14,8 @@ RUN apt update && DEBIAN_FRONTEND=noninteractive apt install -y \
   iputils-ping \
   net-tools \
   traceroute \
-  tshark
+  tshark \
+  vim
 
 RUN echo "#!/bin/bash" > /docker-entry.sh
 RUN echo "set -e" >> /docker-entry.sh

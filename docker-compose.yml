@@ -104,12 +104,27 @@ services:
     environment:
       - NAT64_PREFIX=2001:db8:64:ff9b::/96
       - NAT64_DYNAMIC_POOL=172.19.0.128/25
+      - TEST_SERVER_IPV4=172.19.0.50
     cap_add:
       - NET_ADMIN
     networks:
       testnet:
         ipv4_address: 172.19.0.40
         ipv6_address: fd00:dead:dada::40
+    extra_hosts:
+      # Add a host mapping for the test server's NAT64'd IPv4 address.
+      - "test-server:2001:db8:64:ff9b::ac13:32"
+    volumes:
+      - ./pcaps:/pcaps
+
+  test-server:
+    build:
+      context: .
+      dockerfile: test-server.dockerfile
+    networks:
+      testnet:
+        ipv4_address: 172.19.0.50
+        ipv6_address: fd00:dead:dada::50
     volumes:
       - ./pcaps:/pcaps
     
