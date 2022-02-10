@@ -7,7 +7,6 @@ version: "2.4"
 # sufficient to change values in this file only. The only exception is bind9-named.conf, which will
 # also need to be updated.
 
-# TODO: make gateway explicit?
 networks:
   testnet:
     driver: bridge
@@ -16,7 +15,9 @@ networks:
       driver: default
       config:
         - subnet: 172.18.0.0/16
+          gateway: 172.18.0.1
         - subnet: fd00:dead:beef::/48
+          gateway: fd00:dead:beef::1
 
 services:
   # TODO: gateway doc
