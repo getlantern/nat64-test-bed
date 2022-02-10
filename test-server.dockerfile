@@ -17,7 +17,6 @@ func main() {\n\
 	http.HandleFunc("/", func(w http.ResponseWriter, req *http.Request) {\n\
 		log.Println("received request from", req.RemoteAddr)\n\
 		fmt.Fprintln(w, "successfully connected to the test server")\n\
-		w.WriteHeader(http.StatusOK)\n\
 	})\n\
 	log.Fatalln(http.ListenAndServe(addr, nil))\n\
 }' > main.go

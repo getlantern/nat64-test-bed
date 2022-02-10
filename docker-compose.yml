@@ -7,11 +7,6 @@ version: "2.4"
 # sufficient to change values in this file only. The only exception is bind9-named.conf, which will
 # also need to be updated.
 
-# TODO: do we need privileged mode?
-# TODO: remove pcap volumes
-# TODO: 172.19 -> 172.18
-# TODO: dada -> beef
-
 # TODO: make gateway explicit?
 networks:
   testnet:
@@ -20,8 +15,8 @@ networks:
     ipam:
       driver: default
       config:
-        - subnet: 172.19.0.0/16
-        - subnet: fd00:dead:dada::/48
+        - subnet: 172.18.0.0/16
+        - subnet: fd00:dead:beef::/48
 
 services:
   # TODO: gateway doc
@@ -30,15 +25,15 @@ services:
       context: .
       dockerfile: gateway.dockerfile
       args:
-        - MY_IP=172.19.0.10
-        - NAT64_IP=172.19.0.20
-        - NAT64_DYN_POOL=172.19.0.128/25
+        - MY_IP=172.18.0.10
+        - NAT64_IP=172.18.0.20
+        - NAT64_DYN_POOL=172.18.0.128/25
     cap_add:
       - NET_ADMIN
     networks:
       testnet:
-        ipv4_address: 172.19.0.10
-        ipv6_address: fd00:dead:dada::10
+        ipv4_address: 172.18.0.10
+        ipv6_address: fd00:dead:beef::10
     volumes:
       - ./pcaps:/pcaps
   
@@ -47,13 +42,13 @@ services:
       context: .
       dockerfile: nat64.dockerfile
       args:
-        - GATEWAY_IP=172.19.0.10
-        - DOCKER_GATEWAY_IP=172.19.0.1
-        - TAYGA_CONF_DYNAMIC_POOL=172.19.0.128/25
+        - GATEWAY_IP=172.18.0.10
+        - DOCKER_GATEWAY_IP=172.18.0.1
+        - TAYGA_CONF_DYNAMIC_POOL=172.18.0.128/25
     environment:
-      - TAYGA_CONF_IPV4_ADDR=172.19.0.20
+      - TAYGA_CONF_IPV4_ADDR=172.18.0.20
       - TAYGA_CONF_PREFIX=2001:db8:64:ff9b::/96
-      - TAYGA_CONF_DYNAMIC_POOL=172.19.0.128/25
+      - TAYGA_CONF_DYNAMIC_POOL=172.18.0.128/25
     sysctls:
       - net.ipv6.conf.all.disable_ipv6=0
       - net.ipv6.conf.all.forwarding=1
@@ -61,8 +56,8 @@ services:
       - NET_ADMIN
     networks:
       testnet:
-        ipv4_address: 172.19.0.20
-        ipv6_address: fd00:dead:dada::20
+        ipv4_address: 172.18.0.20
+        ipv6_address: fd00:dead:beef::20
     devices:
       - /dev/net/tun
     volumes:
@@ -74,10 +69,10 @@ services:
       dockerfile: dns64.dockerfile
       args:
         - NAT64_PREFIX=2001:db8:64:ff9b::/96
-        - NAT64_IPV6_ADDR=fd00:dead:dada::20
-        - MY_IPV4=172.19.0.30
+        - NAT64_IPV6_ADDR=fd00:dead:beef::20
+        - MY_IPV4=172.18.0.30
     # The dns64 container uses itself for DNS.
-    dns: fd00:dead:dada::30
+    dns: fd00:dead:beef::30
     sysctls:
       - net.ipv6.conf.all.disable_ipv6=0
       - net.ipv6.conf.all.forwarding=1
@@ -88,8 +83,8 @@ services:
       - ./pcaps:/pcaps
     networks:
       testnet:
-        ipv4_address: 172.19.0.30
-        ipv6_address: fd00:dead:dada::30
+        ipv4_address: 172.18.0.30
+        ipv6_address: fd00:dead:beef::30
   
   client:
     build:
@@ -97,23 +92,23 @@ services:
       dockerfile: client.dockerfile
       args:
         - NAT64_PREFIX=2001:db8:64:ff9b::/96
-        - NAT64_IPV6_ADDR=fd00:dead:dada::20
-        - MY_IPV4=172.19.0.40
-    dns: fd00:dead:dada::30
+        - NAT64_IPV6_ADDR=fd00:dead:beef::20
+        - MY_IPV4=172.18.0.40
+    dns: fd00:dead:beef::30
     # These environment variables are defined for convenience.
     environment:
       - NAT64_PREFIX=2001:db8:64:ff9b::/96
-      - NAT64_DYNAMIC_POOL=172.19.0.128/25
-      - TEST_SERVER_IPV4=172.19.0.50
+      - NAT64_DYNAMIC_POOL=172.18.0.128/25
+      - TEST_SERVER_IPV4=172.18.0.50
     cap_add:
       - NET_ADMIN
     networks:
       testnet:
-        ipv4_address: 172.19.0.40
-        ipv6_address: fd00:dead:dada::40
+        ipv4_address: 172.18.0.40
+        ipv6_address: fd00:dead:beef::40
     extra_hosts:
       # Add a host mapping for the test server's NAT64'd IPv4 address.
-      - "test-server:2001:db8:64:ff9b::ac13:32"
+      - "test-server:2001:db8:64:ff9b::ac12:32"
     volumes:
       - ./pcaps:/pcaps
 
@@ -123,8 +118,10 @@ services:
       dockerfile: test-server.dockerfile
     networks:
       testnet:
-        ipv4_address: 172.19.0.50
-        ipv6_address: fd00:dead:dada::50
+        # Note: if this IPv4 address changes, the client container's host mapping should be updated
+        # as well (see the extra_hosts section in the client container's section).
+        ipv4_address: 172.18.0.50
+        ipv6_address: fd00:dead:beef::50
     volumes:
       - ./pcaps:/pcaps
     
