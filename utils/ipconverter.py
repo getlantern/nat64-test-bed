@@ -4,7 +4,7 @@ import sys
 
 
 USAGE_STR =\
-"""Converts an IPv4 address to an embedded IPv6 (two-group) suffix or
+"""Converts an IPv4 address to an embedded IPv6 two-group suffix or
 vice-versa. The input form is determined automatically.
 
 Usage:
@@ -50,14 +50,10 @@ def six_to_four(ipv6_suffix):
     return '.'.join(fields)
 
 
-def usage():
-    print(USAGE_STR)
-
-
 if __name__ == "__main__":
     if len(sys.argv) < 2 or sys.argv[1] in ["-h", "--help", "help"]:
-        usage()
-        sys.exit(1)
+        print(USAGE_STR)
+        sys.exit(0)
     input = sys.argv[1]
     if "." in input:
         print(four_to_six(input))
