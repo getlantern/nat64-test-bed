@@ -11,7 +11,7 @@ ARG TAYGA_CONF_DYNAMIC_POOL
 ARG GATEWAY_IP
 ARG DOCKER_GATEWAY_IP
 
-RUN apt update && DEBIAN_FRONTEND=noninteractive apt install -y \
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
     iproute2 \
     tshark
 

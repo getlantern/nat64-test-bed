@@ -7,7 +7,7 @@ ARG NAT64_IPV6_ADDR
 ARG MY_IPV4
 
 # Some extra packages are installed for debugging.
-RUN apt update && DEBIAN_FRONTEND=noninteractive apt install -y \
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
   curl \
   dnsutils \
   iproute2 \

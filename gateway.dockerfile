@@ -4,7 +4,7 @@ ARG MY_IP
 ARG NAT64_IP
 ARG NAT64_DYN_POOL
 
-RUN apt update && DEBIAN_FRONTEND=noninteractive apt install -y \
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
     conntrack \
     iproute2 \
     iptables \
