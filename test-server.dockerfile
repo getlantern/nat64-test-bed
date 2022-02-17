@@ -1,4 +1,5 @@
-FROM golang:latest
+# We use a pinned version rather than 'latest' to avoid unnecessary re-builds of the image.
+FROM golang:1.17.7
 
 RUN apt update && DEBIAN_FRONTEND=noninteractive apt install -y tshark
 
