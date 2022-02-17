@@ -3,9 +3,9 @@
 version: "2.4"
 
 # Unfortunately, Docker Compose files offer no means of defining variables, so things like the NAT64
-# prefix are hard-coded below. The individual Dockerfiles are parameterized, so it should be
-# sufficient to change values in this file only. The only exception is bind9-named.conf, which will
-# also need to be updated.
+# prefix and various IP addresses are hard-coded below. The individual Dockerfiles are
+# parameterized, so it should be sufficient to change values in this file only (if necessary). The
+# only exception is bind9-named.conf, which will also need to be updated.
 
 networks:
   testnet:
