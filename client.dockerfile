@@ -1,5 +1,3 @@
-# This is currently just for debugging.
-
 FROM ubuntu:latest
 
 # The maximum amount of time the client will spend waiting for the test server container to start.
