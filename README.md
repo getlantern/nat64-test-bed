@@ -36,7 +36,45 @@ Once you have edited `client.dockerfile` to suit your needs, you can run your te
 
 # Implementation Details
 
-TODO:
+The NAT64 test bed consists of a set of Docker containers on a Docker bridge network. The network topology is roughly:
+
+```
++-------+
+| DNS64 |
++-------+
+    |
++--------+     +-------+     +---------+
+| client |<--->| NAT64 |<--->| gateway | <---> public internet via host OS
++--------+     +-------+     +---------+
+                                  |
+                             +-------------+
+                             | test-server |
+                             +-------------+
+```
+
+where each container is defined for the following role:
+
+**Client:**
+  This container simulates a machine in a NAT64 environment. This machine only has IPv6 connectivity and IPv4 hosts will resolve to an IPv6 address like `<NAT64 prefix>::<embedded IPv4 address>`. Routing of such requests goes through the NAT64 container, to the gateway container, then to the public internet via the host OS. Requests to the test server are likewise routed through the NAT64 container, to the gateway container, then directly to the test-server container.
+
+**DNS64:**
+  This container acts as the DNS server for the client container, implementing DNS64 address resolution. When the client makes a DNS query for an IPv4 host, the DNS server running on this container returns an address like `<NAT64 prefix>::<embedded IPv4 address>`.
+
+  An important note is that DNS queries for dual-stack hosts (those serving both IPv4 and IPv6) will *also* resolve to a NAT64'd address. Moreover, DNS queries for IPv6-only hosts will fail to resolve. For further explanation of this behavior and a workaround, see [Connecting to IPv6 Hosts Directly](#connecting-to-ipv6-hosts-directly) below.
+
+**NAT64:**
+  This container implements IPv6-to-IPv4 address translation for the network using [TAYGA](http://www.litech.org/tayga/). Outbound IPv6 packets from the client container with the NAT64 prefix are routed to the NAT64 container, where they are translated into IPv4 packets. A reverse translation is performed for inbound packets destined for the client container.
+
+**Gateway:**
+  The gateway container implements [Source Network Address Translation (SNAT)](https://www.linuxtopia.org/Linux_Firewall_iptables/x4658.html) for the network. This is used to ensure that all packets coming out of the network and destined for the public internet have the same source IP (the IP of the gateway container).
+
+  The gateway container and this SNAT behavior is actually only necessary for macOS hosts, where Docker-related networking is [quite limited](https://docs.docker.com/desktop/mac/networking/#known-limitations-use-cases-and-workarounds). The gateway container does serve a nice purpose on other hosts in avoiding the need for additional routing rules on the host OS (rules would be required to ensure packets destined for the NAT64 pool of IPv4 addresses go to the NAT64 container, e.g. the static routing rule defined [here](https://github.com/danehans/docker-tayga#detailed-setup)).
+
+**Test Server:**
+  This container is not a neccessary component of the test bed; it is provided for convenience and to allow tests to run without the need to hit the public internet (assuming all images are built).
+
+  This container runs a server on port 80 and responds to all requests with 200 OK and a brief text body. The host name is provided as an argument to `client.dockerfile` and will resolve to the test-server's NAT64'd IPv6 address. If your code can hit the test server, it is working appropriately (for hosts with resolvable IPv4 addresses; things like IPv4 literals may require more advanced testing).
+
 
 # Connecting to IPv6 Hosts Directly
 

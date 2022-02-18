@@ -19,8 +19,8 @@ networks:
         - subnet: fd00:dead:beef::/48
           gateway: fd00:dead:beef::1
 
+# For an explanation of each service, consult the README.
 services:
-  # TODO: gateway doc
   gateway:
     build:
       context: .
