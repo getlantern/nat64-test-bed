@@ -11,4 +11,5 @@ fi
 TEST_SERVER_HOST=$1
 TEST_SERVER_PORT=$2
 
+# This is just a placeholder for an actual test.
 curl -v -6 http://$TEST_SERVER_HOST:$TEST_SERVER_PORT
