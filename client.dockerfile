@@ -2,9 +2,13 @@
 
 FROM ubuntu:latest
 
+# The maximum amount of time the client will spend waiting for the test server container to start.
+ENV TEST_SERVER_MAX_WAIT_SECONDS 60
+
 ARG NAT64_PREFIX
 ARG NAT64_IPV6_ADDR
 ARG MY_IPV4
+ARG TEST_SERVER_PORT
 
 # Some extra packages are installed for debugging.
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
@@ -18,12 +22,14 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
   tshark \
   vim
 
+COPY ./client-scripts/configure-routing.sh /configure-routing.sh
+COPY ./client-scripts/wait-for-server.sh /usr/local/bin/wait-for-server
+
 RUN echo "#!/bin/bash" > /docker-entry.sh
 RUN echo "set -e" >> /docker-entry.sh
-RUN echo "ip addr del ${MY_IPV4}/16 dev eth0" >> /docker-entry.sh
-RUN echo "ip -6 route add ${NAT64_PREFIX} via ${NAT64_IPV6_ADDR}" >> /docker-entry.sh
-RUN echo "sleep 1" >> /docker-entry.sh
-RUN echo "curl -6 -v http://test-server" >> /docker-entry.sh
+RUN echo "/configure-routing.sh ${MY_IPV4} ${NAT64_PREFIX} ${NAT64_IPV6_ADDR}" >> /docker-entry.sh
+RUN echo "wait-for-server test-server ${TEST_SERVER_PORT} ${TEST_SERVER_MAX_WAIT_SECONDS}" >> /docker-entry.sh
+RUN echo "curl -6 -v http://test-server:${TEST_SERVER_PORT}" >> /docker-entry.sh
 RUN chmod +x /docker-entry.sh
 
 ENTRYPOINT [ "/docker-entry.sh" ]

@@ -1,6 +1,8 @@
 # We use a pinned version rather than 'latest' to avoid unnecessary re-builds of the image.
 FROM golang:1.17.7
 
+ARG LISTEN_PORT
+
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y tshark
 
 RUN echo 'package main\n\
@@ -11,7 +13,7 @@ import (\n\
 	"net/http"\n\
 )\n\
 \n\
-const addr = "0.0.0.0:80"\n\
+const addr = "0.0.0.0:'${LISTEN_PORT}'"\n\
 \n\
 func main() {\n\
 	log.Println("listening on", addr)\n\
