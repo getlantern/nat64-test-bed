@@ -3,12 +3,6 @@ FROM ubuntu:latest
 # The maximum amount of time the client will spend waiting for the test server container to start.
 ENV TEST_SERVER_MAX_WAIT_SECONDS 60
 
-ARG NAT64_PREFIX
-ARG NAT64_IPV6_ADDR
-ARG MY_IPV4
-ARG TEST_SERVER_HOST
-ARG TEST_SERVER_PORT
-
 # Some extra packages are installed for debugging.
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
   curl \
@@ -20,6 +14,12 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
   traceroute \
   tshark \
   vim
+
+ARG NAT64_PREFIX
+ARG NAT64_IPV6_ADDR
+ARG MY_IPV4
+ARG TEST_SERVER_HOST
+ARG TEST_SERVER_PORT
 
 COPY ./client-scripts/configure-routing.sh /configure-routing.sh
 COPY ./client-scripts/wait-for-server.sh /usr/local/bin/wait-for-server

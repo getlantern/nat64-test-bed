@@ -1,10 +1,10 @@
 FROM resystit/bind9:latest
 
+RUN apk update && apk add tshark
+
 ARG NAT64_PREFIX
 ARG NAT64_IPV6_ADDR
 ARG MY_IPV4
-
-RUN apk update && apk add tshark
 
 RUN echo "#!/bin/sh" > /docker-entry.sh
 RUN echo "set -e" >> /docker-entry.sh

@@ -5,15 +5,15 @@
 # https://github.com/danehans/docker-tayga
 FROM danehans/tayga:latest
 
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
+    iproute2 \
+    tshark
+
 # GATEWAY_IP: IP address of the gateway container
 # DOCKER_GATEWAY_IP: IP address of the network gateway configured by Docker
 ARG TAYGA_CONF_DYNAMIC_POOL
 ARG GATEWAY_IP
 ARG DOCKER_GATEWAY_IP
-
-RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
-    iproute2 \
-    tshark
 
 # /docker-entry.sh is a file in the base image. We want to run our own entry file instead.
 # Additionally, we need to add a routing rule to ensure traffic from the dynamic pool is routed to

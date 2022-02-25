@@ -1,14 +1,14 @@
 FROM ubuntu:latest
 
-ARG MY_IP
-ARG NAT64_IP
-ARG NAT64_DYN_POOL
-
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
     conntrack \
     iproute2 \
     iptables \
     tshark
+
+ARG MY_IP
+ARG NAT64_IP
+ARG NAT64_DYN_POOL
 
 RUN echo "#!/bin/bash" > /docker-entry.sh
 RUN echo "set -e" >> /docker-entry.sh
