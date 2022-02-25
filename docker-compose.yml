@@ -101,7 +101,6 @@ services:
     # These environment variables are defined for convenience.
     environment:
       - NAT64_PREFIX=2001:db8:64:ff9b::/96
-      - NAT64_DYNAMIC_POOL=172.18.0.128/25
       - TEST_SERVER_IPV4=172.18.0.50
     cap_add:
       - NET_ADMIN

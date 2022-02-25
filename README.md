@@ -6,7 +6,7 @@ A facility for testing NAT64 capabilities. The NAT64 test bed consists of a set 
 
 - [Docker](https://docs.docker.com/get-docker/)
 - [Docker Compose](https://docs.docker.com/compose/install/)
-- Some familiarity with Docker and shell scripting.
+- Some familiarity with Docker and shell scripting
 
 # Testing the Setup
 
@@ -34,22 +34,26 @@ The easiest way to make the dockerfile fit your needs will likely involve the fo
 
 Once you have edited `client.dockerfile` to suit your needs, you can run your test via the `test.sh` script. If you have made your edits appropriately, the script should output anything your test writes to stdout or stderr and should exit with the exit code returned by your test.
 
+For convenience, a few environment variables will be set in the client container. As of this writing, this includes the following:
+- `NAT64_PREFIX`
+  The IPv6 prefix used to translate IPv4 addresses. Unless you will be deploying to a controlled environment, this should only be used for debugging. This is because the IPv6 prefix cannot generally be known ahead of time.
+- `TEST_SERVER_IPV4`
+  This can be used to test connections to IPv4 literals. This is not a common use case, but may be important to support.
+
+To see any other environment variables which may be defined, look at the `environment` section of the client service definition in the `docker-compose.yml` file.
+
 # Implementation Details
 
 The NAT64 test bed consists of a set of Docker containers on a Docker bridge network. The network topology is roughly:
 
 ```
-+-------+
-| DNS64 |
-+-------+
-    |
 +--------+     +-------+     +---------+
 | client |<--->| NAT64 |<--->| gateway | <---> public internet via host OS
 +--------+     +-------+     +---------+
-                                  |
-                             +-------------+
-                             | test-server |
-                             +-------------+
+    |                              |
++-------+                    +-------------+
+| DNS64 |                    | test-server |
++-------+                    +-------------+
 ```
 
 where each container is defined for the following role:
@@ -66,14 +70,14 @@ where each container is defined for the following role:
   This container implements IPv6-to-IPv4 address translation for the network using [TAYGA](http://www.litech.org/tayga/). Outbound IPv6 packets from the client container with the NAT64 prefix are routed to the NAT64 container, where they are translated into IPv4 packets. A reverse translation is performed for inbound packets destined for the client container.
 
 **Gateway:**
-  The gateway container implements [Source Network Address Translation (SNAT)](https://www.linuxtopia.org/Linux_Firewall_iptables/x4658.html) for the network. This is used to ensure that all packets coming out of the network and destined for the public internet have the same source IP (the IP of the gateway container).
+  The gateway container implements [Source Network Address Translation (SNAT)](https://www.linuxtopia.org/Linux_Firewall_iptables/x4658.html) for the network. This is used to ensure that all packets coming out of the network, destined for the public internet, have the same source IP (the IP of the gateway container).
 
   The gateway container and this SNAT behavior is actually only necessary for macOS hosts, where Docker-related networking is [quite limited](https://docs.docker.com/desktop/mac/networking/#known-limitations-use-cases-and-workarounds). The gateway container does serve a nice purpose on other hosts in avoiding the need for additional routing rules on the host OS (rules would be required to ensure packets destined for the NAT64 pool of IPv4 addresses go to the NAT64 container, e.g. the static routing rule defined [here](https://github.com/danehans/docker-tayga#detailed-setup)).
 
 **Test Server:**
   This container is not a neccessary component of the test bed; it is provided for convenience and to allow tests to run without the need to hit the public internet (assuming all images are built).
 
-  This container runs a server on port 80 and responds to all requests with 200 OK and a brief text body. The host name is provided as an argument to `client.dockerfile` and will resolve to the test-server's NAT64'd IPv6 address. If your code can hit the test server, it is working appropriately (for hosts with resolvable IPv4 addresses; things like IPv4 literals may require more advanced testing).
+  This container runs an HTTP server on port 80 and responds to all requests with 200 OK and a brief text body. The host name is provided as an argument to `client.dockerfile` and will resolve to the test-server's NAT64'd IPv6 address. If your code can hit the test server, it is working appropriately (for hosts with resolvable IPv4 addresses; things like IPv4 literals may require more advanced testing).
 
 
 # Connecting to IPv6 Hosts Directly
