@@ -20,10 +20,11 @@ ARG NAT64_IPV6_ADDR
 ARG MY_IPV4
 ARG TEST_SERVER_HOST
 ARG TEST_SERVER_PORT
+ARG TEST_SCRIPT
 
 COPY ./client-scripts/configure-routing.sh /configure-routing.sh
 COPY ./client-scripts/wait-for-server.sh /usr/local/bin/wait-for-server
-COPY ./client-scripts/do-test.sh /do-test.sh
+COPY ./client-scripts/${TEST_SCRIPT} /do-test.sh
 
 RUN echo "#!/bin/bash" > /docker-entry.sh
 RUN echo "set -e" >> /docker-entry.sh

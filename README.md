@@ -95,4 +95,12 @@ A more realistic setup would resolve hosts to their true IPv6 address when possi
 
 # Debugging
 
+A few tools are provided to aid in debugging.
+
+## Entering the Client Container
+
+Generally the client container shuts down, whether the test failed or succeeded. It may be helpful to enter the client container and perform some manual testing. To do so, you can run `./util/enter-client.sh` (from this directory). This will spin up the NAT64 network and attach to the client container via a Bash shell. When you exit the shell, the network will be cleaned up.
+
+## Packet Capture
+
 TODO:
