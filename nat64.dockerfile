@@ -15,6 +15,9 @@ ARG TAYGA_CONF_DYNAMIC_POOL
 ARG GATEWAY_IP
 ARG DOCKER_GATEWAY_IP
 
+COPY ./container-scripts/pcap.sh /usr/local/bin/pcap
+COPY ./container-scripts/flush-pcap.sh /usr/local/bin/flush-pcap
+
 # /docker-entry.sh is a file in the base image. We want to run our own entry file instead.
 # Additionally, we need to add a routing rule to ensure traffic from the dynamic pool is routed to
 # the gateway container.
@@ -37,6 +40,8 @@ RUN chmod +x /configure-gateway-routing.sh
 RUN echo "#!/bin/bash" > /docker-entry.sh
 RUN echo "set -e" >> /docker-entry.sh
 RUN echo "/configure-gateway-routing.sh" >> /docker-entry.sh
+RUN echo "pcap /pcaps/nat64.pcap" >> /docker-entry.sh
+RUN echo 'trap "flush-pcap" EXIT' >> /docker-entry.sh
 RUN echo "/start-tayga.sh" >> /docker-entry.sh
 RUN chmod +x /docker-entry.sh
 

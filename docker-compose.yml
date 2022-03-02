@@ -29,14 +29,16 @@ services:
         - MY_IP=172.18.0.10
         - NAT64_IP=172.18.0.20
         - NAT64_DYN_POOL=172.18.0.128/25
+    environment:
+      - PCAP=${PCAP:-false}
     cap_add:
       - NET_ADMIN
+    volumes:
+      - ./pcaps:/pcaps
     networks:
       testnet:
         ipv4_address: 172.18.0.10
         ipv6_address: fd00:dead:beef::10
-    volumes:
-      - ./pcaps:/pcaps
   
   nat64:
     build:
@@ -50,19 +52,20 @@ services:
       - TAYGA_CONF_IPV4_ADDR=172.18.0.20
       - TAYGA_CONF_PREFIX=2001:db8:64:ff9b::/96
       - TAYGA_CONF_DYNAMIC_POOL=172.18.0.128/25
+      - PCAP=${PCAP:-false}
     sysctls:
       - net.ipv6.conf.all.disable_ipv6=0
       - net.ipv6.conf.all.forwarding=1
     cap_add:
       - NET_ADMIN
-    networks:
-      testnet:
-        ipv4_address: 172.18.0.20
-        ipv6_address: fd00:dead:beef::20
     devices:
       - /dev/net/tun
     volumes:
       - ./pcaps:/pcaps
+    networks:
+      testnet:
+        ipv4_address: 172.18.0.20
+        ipv6_address: fd00:dead:beef::20
 
   dns64:
     build:
@@ -72,8 +75,8 @@ services:
         - NAT64_PREFIX=2001:db8:64:ff9b::/96
         - NAT64_IPV6_ADDR=fd00:dead:beef::20
         - MY_IPV4=172.18.0.30
-    # The dns64 container uses itself for DNS.
-    dns: fd00:dead:beef::30
+    environment:
+      - PCAP=${PCAP:-false}
     sysctls:
       - net.ipv6.conf.all.disable_ipv6=0
       - net.ipv6.conf.all.forwarding=1
@@ -82,6 +85,8 @@ services:
     volumes:
       - ./bind9-named.conf:/etc/bind/named.conf
       - ./pcaps:/pcaps
+    # The dns64 container uses itself for DNS.
+    dns: fd00:dead:beef::30
     networks:
       testnet:
         ipv4_address: 172.18.0.30
@@ -98,22 +103,23 @@ services:
         - TEST_SERVER_HOST=test-server
         - TEST_SERVER_PORT=80
         - TEST_SCRIPT=${CLIENT_SCRIPT:-do-test.sh}
-    dns: fd00:dead:beef::30
-    # These environment variables are defined for convenience.
+    # Environment variables are defined for convenience.
     environment:
       - NAT64_PREFIX=2001:db8:64:ff9b::/96
       - TEST_SERVER_IPV4=172.18.0.50
+      - PCAP=${PCAP:-false}
     cap_add:
       - NET_ADMIN
-    networks:
-      testnet:
-        ipv4_address: 172.18.0.40
-        ipv6_address: fd00:dead:beef::40
     extra_hosts:
       # Add a host mapping for the test server's NAT64'd IPv4 address.
       - "test-server:2001:db8:64:ff9b::ac12:32"
     volumes:
       - ./pcaps:/pcaps
+    dns: fd00:dead:beef::30
+    networks:
+      testnet:
+        ipv4_address: 172.18.0.40
+        ipv6_address: fd00:dead:beef::40
 
   test-server:
     build:
@@ -121,12 +127,14 @@ services:
       dockerfile: test-server.dockerfile
       args:
         - LISTEN_PORT=80
+    environment:
+      - PCAP=${PCAP:-false}
+    volumes:
+      - ./pcaps:/pcaps
     networks:
       testnet:
         # Note: if this IPv4 address changes, the client container's host mapping should be updated
         # as well (see the extra_hosts section in the client container's section).
         ipv4_address: 172.18.0.50
         ipv6_address: fd00:dead:beef::50
-    volumes:
-      - ./pcaps:/pcaps
     

@@ -23,14 +23,14 @@ To test your code in the NAT64 environment, you will need to edit the client con
   iii. Run the actual test.
 
 In editing the dockerfile, make sure you retain the following properties:
-  - Routing is configured (via the script in `client-scripts/configure-routing.sh`) before the tests are run.
+  - Routing is configured (via the script in `container-scripts/configure-routing.sh`) before the tests are run.
   - If using the test server, the `wait-for-server` command is used to ensure the server is up before the tests are run. If you are not using the test server, you can skip this step.
   - The tests produce a non-zero exit code on failure and this exit code is output by the container.
 
 The easiest way to make the dockerfile fit your needs will likely involve the following:
 1. Add to the `apt-get` line to install whatever additional packages your test will need (e.g. your language toolchain).
 2. Copy over necessary resources from the host OS to the container using the `COPY` directive (e.g. the code you want to test). If you do not want to copy these resources into the nat64-test-bed directory, you will need to edit the context defined for the client service in the `docker-compose.yml` file.
-3. Edit the test script in `client-scripts/do-test.sh` to run your tests in the container, using the packages you installed in step 1 and the resources you copied over in step 2.
+3. Edit the test script in `container-scripts/do-test.sh` to run your tests in the container, using the packages you installed in step 1 and the resources you copied over in step 2.
 
 Once you have edited `client.dockerfile` to suit your needs, you can run your test via the `test.sh` script. If you have made your edits appropriately, the script should output anything your test writes to stdout or stderr and should exit with the exit code returned by your test.
 
@@ -59,7 +59,7 @@ The NAT64 test bed consists of a set of Docker containers on a Docker bridge net
 where each container is defined for the following role:
 
 **Client:**
-  This container simulates a machine in a NAT64 environment. This machine only has IPv6 connectivity and IPv4 hosts will resolve to an IPv6 address like `<NAT64 prefix>::<embedded IPv4 address>`. Routing of such requests goes through the NAT64 container, to the gateway container, then to the public internet via the host OS. Requests to the test server are likewise routed through the NAT64 container, to the gateway container, then directly to the test-server container.
+  This container simulates a machine in a NAT64 environment. This machine only has IPv6 connectivity and IPv4 hosts will resolve to an IPv6 address like `<NAT64 prefix>::<embedded IPv4 address>`. Routing of such requests goes through the NAT64 container, to the gateway container, then to the public internet via the host OS. Requests to the test server are likewise routed through the NAT64 container, to the gateway container, then directly to the test server container.
 
 **DNS64:**
   This container acts as the DNS server for the client container, implementing DNS64 address resolution. When the client makes a DNS query for an IPv4 host, the DNS server running on this container returns an address like `<NAT64 prefix>::<embedded IPv4 address>`.
@@ -75,9 +75,9 @@ where each container is defined for the following role:
   The gateway container and this SNAT behavior is actually only necessary for macOS hosts, where Docker-related networking is [quite limited](https://docs.docker.com/desktop/mac/networking/#known-limitations-use-cases-and-workarounds). The gateway container does serve a nice purpose on other hosts in avoiding the need for additional routing rules on the host OS (rules would be required to ensure packets destined for the NAT64 pool of IPv4 addresses go to the NAT64 container, e.g. the static routing rule defined [here](https://github.com/danehans/docker-tayga#detailed-setup)).
 
 **Test Server:**
-  This container is not a neccessary component of the test bed; it is provided for convenience and to allow tests to run without the need to hit the public internet (assuming all images are built).
+  This container is not a neccessary component of the test bed; it is provided for convenience and to allow tests to run without the need to hit the public internet (once all images are built).
 
-  This container runs an HTTP server on port 80 and responds to all requests with 200 OK and a brief text body. The host name is provided as an argument to `client.dockerfile` and will resolve to the test-server's NAT64'd IPv6 address. If your code can hit the test server, it is working appropriately (for hosts with resolvable IPv4 addresses; things like IPv4 literals may require more advanced testing).
+  This container runs an HTTP server on port 80 and responds to all requests with 200 OK and a brief text body. The host name is provided as an argument to `client.dockerfile` and will resolve to the test server's NAT64'd IPv6 address. If your code can hit the test server, it is working appropriately (for hosts with resolvable IPv4 addresses; things like IPv4 literals may require more advanced testing).
 
 
 # Connecting to IPv6 Hosts Directly
@@ -101,6 +101,25 @@ A few tools are provided to aid in debugging.
 
 Generally the client container shuts down, whether the test failed or succeeded. It may be helpful to enter the client container and perform some manual testing. To do so, you can run `./util/enter-client.sh` (from this directory). This will spin up the NAT64 network and attach to the client container via a Bash shell. When you exit the shell, the network will be cleaned up.
 
+While attached to the client container, you can attach to other containers using:
+```
+docker-compose exec <container-name> /bin/bash
+```
+replacing `<container-name>` with the name of the container you want to enter, e.g. `gateway` or `nat64`.
+
 ## Packet Capture
 
-TODO:
+You can run packet capture on all containers by setting the `PCAP` environment variable to "true". For example,
+```
+PCAP=true ./test.sh
+```
+or
+```
+PCAP=true ./utils/enter-client.sh
+```
+
+This will result in packet capture files in the `pcaps` directory in this folder. If you have `tshark` installed, you can view these using commands like
+```
+tshark -r ./pcaps/client.pcap
+```
+Alternatively, you can use Wireshark to view the captured packets in a GUI.

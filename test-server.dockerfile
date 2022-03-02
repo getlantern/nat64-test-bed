@@ -24,4 +24,14 @@ func main() {\n\
 	log.Fatalln(http.ListenAndServe(addr, nil))\n\
 }' > main.go
 
-ENTRYPOINT ["go", "run", "main.go"]
+COPY ./container-scripts/pcap.sh /usr/local/bin/pcap
+COPY ./container-scripts/flush-pcap.sh /usr/local/bin/flush-pcap
+
+RUN echo "#!/bin/bash" > /docker-entry.sh
+RUN echo "set -e" >> /docker-entry.sh
+RUN echo "pcap /pcaps/test-server.pcap" >> /docker-entry.sh
+RUN echo 'trap "flush-pcap" EXIT' >> /docker-entry.sh
+RUN echo "go run main.go" >> /docker-entry.sh
+RUN chmod +x /docker-entry.sh
+
+ENTRYPOINT [ "/docker-entry.sh" ]
