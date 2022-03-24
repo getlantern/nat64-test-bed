@@ -15,15 +15,16 @@ To ensure the nat64 test bed runs properly on your machine, try running the `tes
 # Using the Test Bed
 
 To test your code in the NAT64 environment, you will need to edit the client container definition in `client.dockerfile`. First, examine what the file is currently doing:
+
 1. A number of packages are installed using `apt-get`.
 2. Useful scripts are copied into the container.
 3. The scripts are used to:
-  i. Configure routing on the container.
-  ii. Wait for the test server to start.
-  iii. Run the actual test.
+    1. Configure routing on the container.
+    2. Wait for the test server to start.
+    3. Run the actual test.
 
 In editing the dockerfile, make sure you retain the following properties:
-  - Routing is configured (via the script in `container-scripts/configure-routing.sh`) before the tests are run.
+  - Routing is configured before the tests are run (via the script in `container-scripts/configure-routing.sh`).
   - If using the test server, the `wait-for-server` command is used to ensure the server is up before the tests are run. If you are not using the test server, you can skip this step.
   - The tests produce a non-zero exit code on failure and this exit code is output by the container.
 
